@@ -1,13 +1,11 @@
-
 # Delete Operation for Book Model
 
 **Command:**
 ```python
-book.delete()
-print(Book.objects.all())  # Output: <QuerySet []>
-```
+from bookshelf.models import Book
 
-**Expected Output:**
-```
-<QuerySet []>
-```
+# Delete the book instance
+book.delete()
+
+# Check if the book was deleted
+print(Book.objects.all())  # Output: <QuerySet []>
