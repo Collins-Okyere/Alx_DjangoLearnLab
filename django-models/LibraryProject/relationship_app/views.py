@@ -2,7 +2,9 @@ from django.views.generic.detail import DetailView
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import user_passes_test
 from .models import Book,Library
+
 
 def list_books(request):
     books = Book.objects.all()
@@ -42,3 +44,16 @@ def register(request):
     else:
         form = UserCreationForm()
     return render(request, 'relationship_app/register.html', {'form': form})
+
+
+@user_passes_test()
+def admin_view(request):
+    return render(request, 'relationship_app/admin_view.html', {'user': request.user})
+
+@user_passes_test()
+def librarian_view(request):
+    return render(request, 'relationship_app/librarian_view.html', {'user': request.user})
+
+@user_passes_test()
+def member_view(request):
+    return render(request, 'relationship_app/member_view.html', {'user': request.user})
