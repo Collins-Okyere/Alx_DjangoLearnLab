@@ -13,17 +13,15 @@ def get_books_in_library(library_name):
     return books
 
 # Retrieve the librarian for a library
-def get_librarian_for_library(library_name):
+def get_librarian_for_library(librarian_name):
     try:
-        # Try to get the library object
-        library = Library.objects.get(name=library_name)
+        librarian = Librarian.objects.get(name=librarian_name)
         
-        # Check if a librarian is associated with this library
-        if library.librarian:
-            return library.librarian  # directly access the librarian through the relationship
+        if librarian.library:
+            return librarian.library 
         else:
-            print(f"No librarian assigned to '{library_name}' library.")
+            print(f"No librarian by name '{librarian_name}' is assigned to a library.")
             return None
-    except Library.DoesNotExist:
-        print(f"Library with name '{library_name}' does not exist.")
+    except Librarian.DoesNotExist:
+        print(f"Librarian with name '{librarian_name}' does not exist.")
         return None
