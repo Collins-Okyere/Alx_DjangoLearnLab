@@ -1,0 +1,9 @@
+<form method="post" action="{% url 'example_form_view' %}">
+    {% csrf_token %}
+
+    <!-- Render form fields dynamically -->
+    {{ form.as_p }}
+
+    <!-- Submit button -->
+    <button type="submit">Submit</button>
+</form>

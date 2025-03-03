@@ -1,0 +1,1 @@
+This project is about Django installation and settings.
