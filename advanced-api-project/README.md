@@ -17,6 +17,14 @@ This project is built with Django REST Framework to handle book and author manag
 5. Start the server: `python manage.py runserver`
 
 <!-- API Query Features -->
-- **Filter by author, title, or publication year:** `/api/books/?author=1`
-- **Search books by title or author name:** `/api/books/?search=Harry`
-- **Order results by title or publication year:** `/api/books/?ordering=-publication_year`
+- Filter by author, title, or publication year: `/api/books/?author=1`
+- Search books by title or author name: `/api/books/?search=Harry`
+- Order results by title or publication year: `/api/books/?ordering=-publication_year`
+
+<!-- Running API Tests -->
+- Run tests using: `python manage.py test api`
+- Tests include:
+  - CRUD operations for the Book model
+  - Filtering, searching, and ordering
+  - Authentication-based access controls
+- Ensure all tests pass before deploying.
