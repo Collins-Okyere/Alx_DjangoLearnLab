@@ -15,3 +15,8 @@ This project is built with Django REST Framework to handle book and author manag
 3. Run migrations: `python manage.py migrate`
 4. Create a superuser: `python manage.py createsuperuser`
 5. Start the server: `python manage.py runserver`
+
+<!-- API Query Features -->
+- **Filter by author, title, or publication year:** `/api/books/?author=1`
+- **Search books by title or author name:** `/api/books/?search=Harry`
+- **Order results by title or publication year:** `/api/books/?ordering=-publication_year`
