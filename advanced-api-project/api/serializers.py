@@ -37,6 +37,21 @@ class BookSerializer(serializers.ModelSerializer):
         if value > current_year:
             raise serializers.ValidationError("Publication year cannot be in the future.")
         return value
+    
+    def create(self, validated_data):
+        """
+        Custom logic before creating a new book entry.
+        """
+        return Book.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        """
+        Custom logic before updating a book entry.
+        """
+        instance.title = validated_data.get('title', instance.title)
+        instance.publication_year = validated_data.get('publication_year', instance.publication_year)
+        instance.save()
+        return instance
 
     class Meta:
         model = Book
