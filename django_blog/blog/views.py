@@ -6,8 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Post, Comment
 from .forms import CommentForm
-from django.db.models import Q
-
+from taggit.models import Tag
 from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
@@ -141,18 +140,16 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def get_success_url(self):
         return self.object.post.get_absolute_url()
     
-class PostListView(ListView):
+class PostByTagListView(ListView):
     model = Post
-    template_name = "blog/post_list.html"
-    context_object_name = "posts"
+    template_name = 'blog/post_list.html'
+    context_object_name = 'posts'
 
     def get_queryset(self):
-        query = self.request.GET.get("q")
-        if query:
-            return Post.objects.filter(
-                Q(title__icontains=query) | Q(content__icontains=query) | Q(tags__name__icontains=query)
-            ).distinct()
-        return Post.objects.all()
+        tag_slug = self.kwargs.get('tag_slug')
+        tag = get_object_or_404(Tag, slug=tag_slug)
+        return Post.objects.filter(tags__in=[tag])
+    
 
 def tagged_posts(request, tag_name):
     posts = Post.objects.filter(tags__name__iexact=tag_name)
