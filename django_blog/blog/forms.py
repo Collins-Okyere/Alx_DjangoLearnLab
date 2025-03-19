@@ -28,18 +28,18 @@ class CommentForm(forms.ModelForm):
         
 
 class PostForm(forms.ModelForm):
-    tags = forms.CharField(required=False, help_text="Separate tags with commas")  # ✅ Allow manual tag entry
+    tags = forms.CharField(required=False, help_text="Separate tags with commas")
 
     class Meta:
         model = Post
         fields = ['title', 'content', 'tags']
         widgets = {
-            'tags': TagWidget(attrs={'placeholder': 'Add tags separated by commas'}),
+            'tags': TagWidget(),
         }
 
     def save(self, commit=True):
         post = super().save(commit=False)
-        post.tags.set(*self.cleaned_data['tags'].split(','))  # ✅ Convert string to tag list
+        post.tags.set(*self.cleaned_data['tags'].split(','))
         if commit:
             post.save()
         return post
