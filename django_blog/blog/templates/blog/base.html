@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Django Blog{% endblock %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; padding: 0; background-color: #f4f4f4; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
+        nav { background: #333; padding: 10px; text-align: center; }
+        nav a { color: white; text-decoration: none; margin: 0 10px; }
+        .footer { text-align: center; margin-top: 20px; font-size: 14px; color: #555; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        {% comment %} <a href="{% url 'home' %}">Home</a> {% endcomment %}
+        {% if user.is_authenticated %}
+            <a href="{% url 'profile' %}">Profile</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}">Register</a>
+        {% endif %}
+    </nav>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 Django Blog. All rights reserved.</p>
+    </div>
+
+</body>
+</html>
