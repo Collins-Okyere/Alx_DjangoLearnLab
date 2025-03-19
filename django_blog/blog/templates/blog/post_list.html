@@ -1,11 +1,17 @@
-{% extends 'blog/base.html' %}
-{% block content %}
-    <h2>All Blog Posts</h2>
-    {% for post in posts %}
-        <div>
-            <h3><a href="{% url 'post_detail' post.pk %}">{{ post.title }}</a></h3>
-            <p>By {{ post.author }} on {{ post.published_date }}</p>
-            <p>{{ post.content|truncatewords:30 }}</p>
-        </div>
-    {% endfor %}
-{% endblock %}
+<form method="GET" action="{% url 'post_list' %}">
+    <input type="text" name="q" placeholder="Search by title, content, or tag">
+    <button type="submit">Search</button>
+</form>
+
+{% for post in posts %}
+    <h2><a href="{% url 'post_detail' post.pk %}">{{ post.title }}</a></h2>
+    <p>{{ post.content|truncatewords:30 }}</p>
+    
+    <p>Tags: 
+        {% for tag in post.tags.all %}
+            <a href="{% url 'tagged_posts' tag.name %}">{{ tag.name }}</a>
+        {% endfor %}
+    </p>
+{% empty %}
+    <p>No posts found.</p>
+{% endfor %}
