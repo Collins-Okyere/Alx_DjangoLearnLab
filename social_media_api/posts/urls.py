@@ -1,11 +1,8 @@
+from django.contrib import admin
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import PostViewSet, CommentViewSet
-
-router = DefaultRouter()
-router.register(r'posts', PostViewSet)
-router.register(r'comments', CommentViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('admin/', admin.site.urls),
+    path('api/accounts/', include('accounts.urls')),  # Ensure accounts URLs are included
+    path('api/', include('posts.urls')),  # ✅ Include posts and comments URLs
 ]
