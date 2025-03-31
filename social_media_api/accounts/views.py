@@ -1,31 +1,23 @@
-from django.contrib.auth import authenticate
-from django.contrib.auth.models import update_last_login
-from rest_framework.authtoken.models import Token
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.response import Response
+from django.contrib.auth import get_user_model
 from rest_framework import generics, status
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
-from .models import CustomUser
-from .serializers import UserSerializer
+from .serializers import UserSerializer, LoginSerializer
 
-class RegisterView(generics.CreateAPIView):
-    queryset = CustomUser.objects.all()
+User = get_user_model()
+
+class RegisterUserView(generics.CreateAPIView):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # Anyone can register
+
+
+class LoginUserView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+    permission_classes = [AllowAny]  # Anyone can log in
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key, 'user': serializer.data}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class LoginView(ObtainAuthToken):
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
-        token, created = Token.objects.get_or_create(user=user)
-        update_last_login(None, user)
-        return Response({'token': token.key, 'user_id': user.id})
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
