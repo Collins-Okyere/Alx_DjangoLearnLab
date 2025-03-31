@@ -2,8 +2,10 @@ from django.contrib.auth import get_user_model
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from .serializers import UserSerializer, LoginSerializer
+from .serializers import UserSerializer, LoginSerializer, CustomUserSerializer
 from rest_framework import status, permissions
+from rest_framework.views import APIView
+from accounts.models import CustomUser
 from rest_framework.decorators import api_view, permission_classes
 
 User = get_user_model()
@@ -22,6 +24,12 @@ class LoginUserView(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+class CustomUserListView(APIView):
+    def get(self, request, format=None):
+        users = CustomUser.objects.all()  # Get all users from the CustomUser model
+        serializer = CustomUserSerializer(users, many=True)
+        return Response(serializer.data)
 
 
 @api_view(['POST'])
@@ -46,3 +54,4 @@ def unfollow_user(request, user_id):
         return Response({"message": f"You have unfollowed {user_to_unfollow.username}."})
     except User.DoesNotExist:
         return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
