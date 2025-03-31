@@ -4,9 +4,8 @@ from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework import status
+from rest_framework import status, generics
 from .models import Post, Like
-from rest_framework.permissions import IsAuthenticated
 from notifications.models import Notification
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
@@ -39,6 +38,14 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+class PostDetailView(generics.RetrieveAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+
+    def get_object(self):
+        # Get the Post object or raise a 404 error if not found
+        pk = self.kwargs.get('pk')  # Get the pk from URL kwargs
+        return get_object_or_404(Post, pk=pk)
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()

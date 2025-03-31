@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,6 +29,19 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
+SECRET_KEY = config('SECRET_KEY')
+DATABASE_PASSWORD = config('DATABASE_PASSWORD')
+
+DEBUG = False
+
+ALLOWED_HOSTS = ['yourdomain.com', 'www.yourdomain.com', 'IP_ADDRESS']
+
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_SSL_REDIRECT = True  # Set to False if you do not use SSL in production
+
 
 
 # Application definition
