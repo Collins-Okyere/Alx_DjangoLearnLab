@@ -4,17 +4,17 @@ from rest_framework.authtoken.models import Token
 
 User = get_user_model()
 
-
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)  # Ensure password is not exposed
+    password = serializers.CharField(write_only=True)  # Ensures password is hidden
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
+        fields = ['id', 'username', 'email', 'password', 'bio', 'profile_picture']
 
     def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)  # Use create_user for proper hashing
-        Token.objects.create(user=user)  # Generate token upon registration
+        """Use `create_user()` to properly hash passwords"""
+        user = User.objects.create_user(**validated_data)  # ✅ Correct usage
+        Token.objects.create(user=user)  # Generate auth token
         return user
 
 
