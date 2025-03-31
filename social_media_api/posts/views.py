@@ -5,13 +5,10 @@ from .serializers import PostSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status, generics
-from rest_framework.response import Response
-from rest_framework import status
 from django.contrib.auth import get_user_model
 from notifications.models import Notification
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
-
 
 User = get_user_model()
 
@@ -33,7 +30,6 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
 
-
 class PostDetailView(generics.RetrieveAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
@@ -42,10 +38,6 @@ class PostDetailView(generics.RetrieveAPIView):
         # Get the Post object or raise a 404 error if not found
         pk = self.kwargs.get('pk')  # Get the pk from URL kwargs
         return get_object_or_404(Post, pk=pk)
-
-class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer  # Replace with your actual serializer class
 
 
 @api_view(['POST'])
