@@ -4,8 +4,7 @@ from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.views import APIView
-from rest_framework import status
+from rest_framework import generics, status
 from .models import Post, Like
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
@@ -47,28 +46,36 @@ def user_feed(request):
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data)
 
-class LikePostView(APIView):
-    def post(self, request, post_id):
-        user = request.user
-        post = Post.objects.get(id=post_id)
-
-        if Like.objects.filter(user=user, post=post).exists():
-            return Response({"message": "You already liked this post."}, status=400)
-
-        Like.objects.create(user=user, post=post)
-        return Response({"message": "Post liked successfully."}, status=201)
-
-class UnlikePostView(APIView):
+class LikePostView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, pk, format=None):
-        post = Post.objects.get(pk=pk)
-        user = request.user
-        like = Like.objects.filter(user=user, post=post).first()
-        if not like:
-            return Response({"detail": "You haven't liked this post."}, status=status.HTTP_400_BAD_REQUEST)
-        like.delete()
+    def post(self, request, pk):
+        post = get_object_or_404(Post, pk=pk)
+        
+        like, created = Like.objects.get_or_create(user=request.user, post=post)
+        
+        if created:
+            Notification.objects.create(
+                recipient=post.author, 
+                actor=request.user,
+                verb="liked your post",
+                target=post
+            )
+            return Response({"message": "Post liked."}, status=status.HTTP_201_CREATED)
+        
+        return Response({"message": "You have already liked this post."}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"detail": "Post unliked successfully."}, status=status.HTTP_200_OK)
+class UnlikePostView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
 
-
+    def post(self, request, pk):
+        post = get_object_or_404(Post, pk=pk)
+        
+        # Try to  the like object
+        like = Like.objects.filter(user=request.user, post=post).first()
+        
+        if like:
+            like.delete()
+            return Response({"message": "Post unliked."}, status=status.HTTP_200_OK)
+        
+        return Response({"message": "You haven't liked this post yet."}, status=status.HTTP_400_BAD_REQUEST)
