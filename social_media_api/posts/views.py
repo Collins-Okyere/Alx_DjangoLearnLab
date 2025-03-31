@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, filters
 from rest_framework.pagination import PageNumberPagination
 from .models import Post, Comment
@@ -8,8 +9,7 @@ from rest_framework import generics, status
 from .models import Post, Like
 from rest_framework.permissions import IsAuthenticated
 from notifications.models import Notification
-from django.shortcuts import get_object_or_404
-
+from rest_framework.views import APIView
 
 
 class PostPagination(PageNumberPagination):
@@ -70,18 +70,26 @@ class LikePostView(generics.GenericAPIView):
 
         return Response({"message": "You have already liked this post."}, status=status.HTTP_400_BAD_REQUEST)
 
-class UnlikePostView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-
+class UnlikePostView(APIView):
     def post(self, request, pk):
-        # Correct usage of get_object_or_404 to fetch the post
+        # Get the post object or return a 404 if not found
         post = get_object_or_404(Post, pk=pk)
 
-        # Try to get the like object
-        like = Like.objects.filter(user=request.user, post=post).first()
+        # Check if the user has already liked the post
+        try:
+            like = Like.objects.get(user=request.user, post=post)
+        except Like.DoesNotExist:
+            return Response({"detail": "You have not liked this post."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if like:
-            like.delete()  # Remove the like
-            return Response({"message": "Post unliked."}, status=status.HTTP_200_OK)
+        # Remove the like
+        like.delete()
 
-        return Response({"message": "You haven't liked this post yet."}, status=status.HTTP_400_BAD_REQUEST)
+        # Create a notification for the post author (unlike action)
+        Notification.objects.create(
+            recipient=post.author,
+            actor=request.user,
+            verb="unliked your post",
+            target=post
+        )
+
+        return Response({"detail": "Post unliked successfully."}, status=status.HTTP_200_OK)
