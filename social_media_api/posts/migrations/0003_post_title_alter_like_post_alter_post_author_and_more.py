@@ -19,18 +19,9 @@ class Migration(migrations.Migration):
             field=models.CharField(default='Untitled', max_length=100),
         ),
         migrations.AlterField(
-            model_name='like',
-            name='post',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='posts.post'),
-        ),
-        migrations.AlterField(
             model_name='post',
             name='author',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AlterUniqueTogether(
-            name='like',
-            unique_together={('user', 'post')},
         ),
         migrations.CreateModel(
             name='Notification',
