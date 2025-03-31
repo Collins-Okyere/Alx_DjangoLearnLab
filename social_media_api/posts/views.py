@@ -8,7 +8,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import status, generics
 from .models import Post, Like
 from notifications.models import Notification
-from rest_framework.views import APIView
 
 
 class PostPagination(PageNumberPagination):
@@ -65,42 +64,61 @@ def user_feed(request):
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data)
 
+from django.shortcuts import get_object_or_404
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .models import Post, Like, Notification
+from django.contrib.auth import get_user_model
 
-class LikePostView(APIView):
-    def post(self, request, pk):
-        # Get the post object or return a 404 if not found
-        post = get_object_or_404(Post, pk=pk)
+User = get_user_model()
 
-        # Ensure the user hasn't already liked the post
-        like, created = Like.objects.get_or_create(user=request.user, post=post)
+@api_view(['POST'])
+def like_post(request, pk):
+    # Get the post object or return 404 if not found
+    post = get_object_or_404(Post, pk=pk)
+    
+    # Ensure the user is authenticated
+    if not request.user.is_authenticated:
+        return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        if not created:
-            return Response({"detail": "You have already liked this post."}, status=status.HTTP_400_BAD_REQUEST)
+    # Check if the user has already liked the post
+    like, created = Like.objects.get_or_create(user=request.user, post=post)
+    
+    if not created:  # If the like already exists, we return a response indicating that
+        return Response({"detail": "You have already liked this post."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create a notification for the post author
-        Notification.objects.create(
-            recipient=post.author,
-            actor=request.user,
-            verb="liked your post",
-            target=post
-        )
+    # Create a notification about the like
+    Notification.objects.create(
+        recipient=post.author,  # The author of the post is notified
+        action="liked",  # You can customize this field to show what action took place
+        target=post
+    )
 
-        return Response({"detail": "Post liked successfully."}, status=status.HTTP_200_OK)
+    return Response({"detail": "Post liked successfully!"}, status=status.HTTP_201_CREATED)
 
 
-class UnlikePostView(APIView):
-    def post(self, request, pk):
-        # Get the post object or return a 404 if not found
-        post = get_object_or_404(Post, pk=pk)
+@api_view(['POST'])
+def unlike_post(request, pk):
+    # Get the post object or return 404 if not found
+    post = get_object_or_404(Post, pk=pk)
 
-        # Check if the user has already liked the post
-        try:
-            like = Like.objects.get(user=request.user, post=post)
-        except Like.DoesNotExist:
-            return Response({"detail": "You have not liked this post."}, status=status.HTTP_400_BAD_REQUEST)
+    # Ensure the user is authenticated
+    if not request.user.is_authenticated:
+        return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # Remove the like
-        like.delete()
+    # Find the like record to delete
+    try:
+        like = Like.objects.get(user=request.user, post=post)
+        like.delete()  # Remove the like
+    except Like.DoesNotExist:
+        return Response({"detail": "You haven't liked this post yet."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create a notification for the post author (un
+    # Create a notification about the unlike
+    Notification.objects.create(
+        recipient=post.author,  # The author of the post is notified
+        action="unliked",  # You can customize this field to show what action took place
+        target=post
+    )
 
+    return Response({"detail": "Post unliked successfully!"}, status=status.HTTP_200_OK)
