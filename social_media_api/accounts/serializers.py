@@ -5,16 +5,17 @@ from rest_framework.authtoken.models import Token
 User = get_user_model()  # ✅ Get the custom user model
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)  # ✅ Ensure password is hidden
+    password = serializers.CharField(write_only=True)
+    followers_count = serializers.IntegerField(source='followers.count', read_only=True)
+    following_count = serializers.IntegerField(source='following.count', read_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password']
+        fields = ['id', 'username', 'email', 'followers_count', 'following_count']
 
     def create(self, validated_data):
-        """✅ Ensure we use `create_user()` to hash passwords properly"""
-        user = get_user_model().objects.create_user(**validated_data)  # ✅ Fix applied
-        Token.objects.create(user=user)  # ✅ Generate auth token
+        user = get_user_model().objects.create_user(**validated_data)
+        Token.objects.create(user=user)
         return user
 
 

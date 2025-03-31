@@ -13,3 +13,9 @@ DELETE /posts/{id}/ → Delete a post (only the author can)
 POST /comments/ → Comment on a post
 
 GET /comments/ → List comments
+
+Follow a user: POST /api/accounts/follow/{user_id}/
+
+Unfollow a user: POST /api/accounts/unfollow/{user_id}/
+
+Get user feed: GET /api/feed/
