@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, filters
 from rest_framework.pagination import PageNumberPagination
 from .models import Post, Comment
@@ -8,7 +9,6 @@ from rest_framework import status, generics
 from .models import Post, Like
 from notifications.models import Notification
 from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
 
 
 class PostPagination(PageNumberPagination):
