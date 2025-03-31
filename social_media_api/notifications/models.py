@@ -1,11 +1,18 @@
 # notifications/models.py
+from django.conf import settings
 from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from accounts.models import CustomUser
 
 class Notification(models.Model):
-    recipient = models.ForeignKey(CustomUser, related_name='notifications', on_delete=models.CASCADE)
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notifications',  # Add related_name
+        related_query_name='notification',  # Optional: for reverse queries
+    )
+    # Other fields...
     actor = models.ForeignKey(CustomUser, related_name='actions', on_delete=models.CASCADE)
     verb = models.CharField(max_length=255)
     target_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)

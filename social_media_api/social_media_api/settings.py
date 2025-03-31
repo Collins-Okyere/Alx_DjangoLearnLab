@@ -29,6 +29,7 @@ ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -43,7 +44,6 @@ INSTALLED_APPS = [
     'accounts',
     'posts',
     'notifications',
-    'comments',
 ]
 
 MIDDLEWARE = [

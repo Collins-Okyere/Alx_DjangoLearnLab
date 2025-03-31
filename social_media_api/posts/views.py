@@ -1,15 +1,15 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, permissions, filters
 from rest_framework.pagination import PageNumberPagination
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework import generics, status
+from rest_framework import status
 from .models import Post, Like
 from rest_framework.permissions import IsAuthenticated
 from notifications.models import Notification
 from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 
 
 class PostPagination(PageNumberPagination):
@@ -39,6 +39,17 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer  # Replace with your actual serializer class
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer  # Replace with your actual serializer class
+
+
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def user_feed(request):
@@ -48,27 +59,27 @@ def user_feed(request):
     return Response(serializer.data)
 
 
-class LikePostView(generics.GenericAPIView):
-    permission_classes = [IsAuthenticated]
-
+class LikePostView(APIView):
     def post(self, request, pk):
-        # Correct usage of get_object_or_404 to fetch the post
+        # Get the post object or return a 404 if not found
         post = get_object_or_404(Post, pk=pk)
 
-        # Check if the user already liked the post
+        # Ensure the user hasn't already liked the post
         like, created = Like.objects.get_or_create(user=request.user, post=post)
 
-        if created:
-            # Create a notification for the post owner
-            Notification.objects.create(
-                recipient=post.author, 
-                actor=request.user,
-                verb="liked your post",
-                target=post
-            )
-            return Response({"message": "Post liked."}, status=status.HTTP_201_CREATED)
+        if not created:
+            return Response({"detail": "You have already liked this post."}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"message": "You have already liked this post."}, status=status.HTTP_400_BAD_REQUEST)
+        # Create a notification for the post author
+        Notification.objects.create(
+            recipient=post.author,
+            actor=request.user,
+            verb="liked your post",
+            target=post
+        )
+
+        return Response({"detail": "Post liked successfully."}, status=status.HTTP_200_OK)
+
 
 class UnlikePostView(APIView):
     def post(self, request, pk):
@@ -84,12 +95,5 @@ class UnlikePostView(APIView):
         # Remove the like
         like.delete()
 
-        # Create a notification for the post author (unlike action)
-        Notification.objects.create(
-            recipient=post.author,
-            actor=request.user,
-            verb="unliked your post",
-            target=post
-        )
+        # Create a notification for the post author (un
 
-        return Response({"detail": "Post unliked successfully."}, status=status.HTTP_200_OK)
