@@ -105,6 +105,8 @@ DATABASES = {
 }
 
 
+PORT = 8000  # You can specify a port of your choice (e.g., 8080 or any other open port)
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
