@@ -8,7 +8,7 @@ from rest_framework import status, generics
 from django.contrib.auth import get_user_model
 from notifications.models import Notification
 from django.contrib.contenttypes.models import ContentType
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404  # Correct import
 
 User = get_user_model()
 
@@ -35,14 +35,13 @@ class PostDetailView(generics.RetrieveAPIView):
     serializer_class = PostSerializer
 
     def get_object(self):
-        # Get the Post object or raise a 404 error if not found
         pk = self.kwargs.get('pk')  # Get the pk from URL kwargs
-        return get_object_or_404(Post, pk=pk)
+        return get_object_or_404(Post, pk=pk)  # Correct usage of get_object_or_404
 
 
 @api_view(['POST'])
 def like_post(request, pk):
-    post = get_object_or_404(Post, pk=pk)  # Use get_object_or_404
+    post = get_object_or_404(Post, pk=pk)  # Correct usage of get_object_or_404
 
     if not request.user.is_authenticated:
         return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
@@ -66,7 +65,7 @@ def like_post(request, pk):
 
 @api_view(['POST'])
 def unlike_post(request, pk):
-    post = get_object_or_404(Post, pk=pk)  # Use get_object_or_404
+    post = get_object_or_404(Post, pk=pk)  # Correct usage of get_object_or_404
 
     if not request.user.is_authenticated:
         return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
