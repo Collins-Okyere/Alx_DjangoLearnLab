@@ -15,6 +15,18 @@ from pathlib import Path
 DEBUG = False
 ALLOWED_HOSTS = ['*']
 
+# Security Settings for Production
+
+# Prevent Cross-Site Scripting attacks by enabling the XSS filter in browsers.
+SECURE_BROWSER_XSS_FILTER = True
+
+# Prevent your site from being embedded in a frame, protecting against clickjacking attacks.
+X_FRAME_OPTIONS = 'DENY'  # You can use 'SAMEORIGIN' to allow embedding on the same origin.
+
+# Redirect all HTTP connections to HTTPS.
+SECURE_SSL_REDIRECT = True  # Ensures that all HTTP requests are redirected to HTTPS in production.
+
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
