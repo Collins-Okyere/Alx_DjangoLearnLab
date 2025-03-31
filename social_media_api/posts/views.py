@@ -4,6 +4,10 @@ from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.views import APIView
+from rest_framework import status
+from .models import Post, Like
+from rest_framework.permissions import IsAuthenticated
 
 class PostPagination(PageNumberPagination):
     page_size = 10
@@ -39,3 +43,29 @@ def user_feed(request):
     posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
     serializer = PostSerializer(posts, many=True)
     return Response(serializer.data)
+
+class LikePostView(APIView):
+    def post(self, request, post_id):
+        user = request.user
+        post = Post.objects.get(id=post_id)
+
+        if Like.objects.filter(user=user, post=post).exists():
+            return Response({"message": "You already liked this post."}, status=400)
+
+        Like.objects.create(user=user, post=post)
+        return Response({"message": "Post liked successfully."}, status=201)
+
+class UnlikePostView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk, format=None):
+        post = Post.objects.get(pk=pk)
+        user = request.user
+        like = Like.objects.filter(user=user, post=post).first()
+        if not like:
+            return Response({"detail": "You haven't liked this post."}, status=status.HTTP_400_BAD_REQUEST)
+        like.delete()
+
+        return Response({"detail": "Post unliked successfully."}, status=status.HTTP_200_OK)
+
+
