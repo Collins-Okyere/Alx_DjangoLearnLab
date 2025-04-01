@@ -1,7 +1,6 @@
-from rest_framework import viewsets, permissions, filters
-from rest_framework.pagination import PageNumberPagination
+from rest_framework import viewsets, permissions
 from .models import Post, Like
-from .serializers import PostSerializer
+from .serializers import PostSerializer, CommentSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status, generics
@@ -9,7 +8,8 @@ from django.contrib.auth import get_user_model
 from notifications.models import Notification
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404  # Correct import
-
+from rest_framework import viewsets, permissions
+from .models import Post, Comment
 User = get_user_model()
 
 class PostDetailView(generics.RetrieveAPIView):
@@ -20,6 +20,11 @@ class PostDetailView(generics.RetrieveAPIView):
         pk = self.kwargs.get('pk')  # Get the pk from URL kwargs
         return get_object_or_404(Post, pk=pk)  # Correct usage of get_object_or_404
 
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()  # Get all comments
+    serializer_class = CommentSerializer  # The serializer class for Comment
+    permission_classes = [permissions.IsAuthenticated]  # Set permission classes for authentication
 
 @api_view(['POST'])
 def like_post(request, pk):
