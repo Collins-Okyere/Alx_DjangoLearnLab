@@ -33,12 +33,14 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 @api_view(['POST'])
 def like_post(request, pk):
-    post = get_object_or_404(Post, pk=pk)  # Correct usage of get_object_or_404
+    # Retrieve the post using get_object_or_404
+    post = get_object_or_404(Post, pk=pk)
 
+    # Check if user is authenticated
     if not request.user.is_authenticated:
         return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
 
-    # Check if user already liked this post
+    # Check if user already liked the post
     like, created = Like.objects.get_or_create(user=request.user, post=post)
     if not created:
         return Response({"detail": "You have already liked this post."}, status=status.HTTP_400_BAD_REQUEST)
@@ -54,15 +56,17 @@ def like_post(request, pk):
 
     return Response({"detail": "Post liked successfully!"}, status=status.HTTP_201_CREATED)
 
-
 @api_view(['POST'])
 def unlike_post(request, pk):
-    post = get_object_or_404(Post, pk=pk)  # Correct usage of get_object_or_404
+    # Retrieve the post using get_object_or_404
+    post = get_object_or_404(Post, pk=pk)
 
+    # Check if user is authenticated
     if not request.user.is_authenticated:
         return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
 
     try:
+        # Retrieve the Like instance and delete it
         like = Like.objects.get(user=request.user, post=post)
         like.delete()
     except Like.DoesNotExist:
@@ -78,6 +82,8 @@ def unlike_post(request, pk):
     )
 
     return Response({"detail": "Post unliked successfully!"}, status=status.HTTP_200_OK)
+
+
 
 class PostPagination(PageNumberPagination):
     page_size = 10
