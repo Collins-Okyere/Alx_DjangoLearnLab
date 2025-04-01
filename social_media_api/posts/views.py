@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, filters
 from .models import Post, Like
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework.response import Response
@@ -10,7 +10,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404  # Correct import
 from rest_framework import viewsets, permissions
 from .models import Post, Comment
+from rest_framework.pagination import PageNumberPagination
+
 User = get_user_model()
+
 
 class PostDetailView(generics.RetrieveAPIView):
     queryset = Post.objects.all()
@@ -73,3 +76,30 @@ def unlike_post(request, pk):
     )
 
     return Response({"detail": "Post unliked successfully!"}, status=status.HTTP_200_OK)
+
+class PostPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+class PostViewSet(viewsets.ModelViewSet):
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = PostPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title', 'content']
+
+    def get_queryset(self):
+        # Get the authenticated user
+        user = self.request.user
+        
+        # Check if the user is following anyone
+        following_users = user.following.all()
+        
+        if following_users.exists():
+            # Return posts by the users the authenticated user is following
+            return Post.objects.filter(author__in=following_users).order_by('-created_at')
+        else:
+            # If no following, return an empty queryset or all posts
+            return Post.objects.none()  # Return no posts if not following anyone
