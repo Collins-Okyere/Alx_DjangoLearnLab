@@ -11,6 +11,8 @@ from django.shortcuts import get_object_or_404  # Correct import
 from rest_framework import viewsets, permissions
 from .models import Post, Comment
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 User = get_user_model()
 
@@ -103,3 +105,23 @@ class PostViewSet(viewsets.ModelViewSet):
         else:
             # If no following, return an empty queryset or all posts
             return Post.objects.none()  # Return no posts if not following anyone
+        
+
+
+class FeedView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Get users the current user is following
+        following_users = request.user.following.all()
+
+        if following_users.exists():
+            # Filter posts by the users the authenticated user is following
+            posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
+        else:
+            # If the user is not following anyone, return an empty queryset or a default response
+            posts = Post.objects.none()
+
+        # Serialize the posts
+        serializer = PostSerializer(posts, many=True)
+        return Response(serializer.data)
