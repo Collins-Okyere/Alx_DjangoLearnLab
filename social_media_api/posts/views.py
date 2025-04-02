@@ -1,22 +1,18 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, permissions, filters
-from .models import Post, Like
-from .serializers import PostSerializer, CommentSerializer
+from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
+from rest_framework import viewsets, permissions, filters, generics, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from rest_framework import status
-from django.contrib.auth import get_user_model
-from notifications.models import Notification
-from django.contrib.contenttypes.models import ContentType
-from rest_framework import viewsets, permissions
-from .models import Post, Comment
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import generics
+
+from .models import Post, Like, Comment
+from .serializers import PostSerializer, CommentSerializer
+from notifications.models import Notification
 
 User = get_user_model()
-
 
 class PostDetailView(generics.RetrieveAPIView):
     queryset = Post.objects.all()
@@ -26,26 +22,24 @@ class PostDetailView(generics.RetrieveAPIView):
         pk = self.kwargs.get('pk')  # Get the pk from URL kwargs
         return get_object_or_404(Post, pk=pk)
 
+
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()  # Get all comments
-    serializer_class = CommentSerializer  # The serializer class for Comment
-    permission_classes = [permissions.IsAuthenticated]  # Set permission classes for authentication
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
 
 @api_view(['POST'])
 def like_post(request, pk):
-    # Retrieve the post using get_object_or_404
     post = get_object_or_404(Post, pk=pk)
 
-    # Check if user is authenticated
     if not request.user.is_authenticated:
         return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
 
-    # Check if user already liked the post
     like, created = Like.objects.get_or_create(user=request.user, post=post)
     if not created:
         return Response({"detail": "You have already liked this post."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Create a notification for the post author
     Notification.objects.create(
         recipient=post.author,
         actor=request.user,
@@ -56,23 +50,20 @@ def like_post(request, pk):
 
     return Response({"detail": "Post liked successfully!"}, status=status.HTTP_201_CREATED)
 
+
 @api_view(['POST'])
 def unlike_post(request, pk):
-    # Retrieve the post using get_object_or_404
     post = get_object_or_404(Post, pk=pk)
 
-    # Check if user is authenticated
     if not request.user.is_authenticated:
         return Response({"detail": "Authentication required."}, status=status.HTTP_401_UNAUTHORIZED)
 
     try:
-        # Retrieve the Like instance and delete it
         like = Like.objects.get(user=request.user, post=post)
         like.delete()
     except Like.DoesNotExist:
         return Response({"detail": "You haven't liked this post yet."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Create a notification for the post author about unliking
     Notification.objects.create(
         recipient=post.author,
         actor=request.user,
@@ -82,7 +73,6 @@ def unlike_post(request, pk):
     )
 
     return Response({"detail": "Post unliked successfully!"}, status=status.HTTP_200_OK)
-
 
 
 class PostPagination(PageNumberPagination):
@@ -99,35 +89,26 @@ class PostViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'content']
 
     def get_queryset(self):
-        # Get the authenticated user
         user = self.request.user
-        
-        # Check if the user is following anyone
-        following_users = user.following.all()
-        
-        if following_users.exists():
-            # Return posts by the users the authenticated user is following
-            return Post.objects.filter(author__in=following_users).order_by('-created_at')
-        else:
-            # If no following, return an empty queryset or all posts
-            return Post.objects.none()  # Return no posts if not following anyone
-        
+
+        if user.is_authenticated:
+            following_users = user.following.all()
+            if following_users.exists():
+                return Post.objects.filter(author__in=following_users).order_by('-created_at')
+
+        return Post.objects.all().order_by('-created_at')  # Default to all posts if not following anyone
 
 
 class FeedView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Get users the current user is following
         following_users = request.user.following.all()
 
         if following_users.exists():
-            # Filter posts by the users the authenticated user is following
             posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
         else:
-            # If the user is not following anyone, return an empty queryset or a default response
             posts = Post.objects.none()
 
-        # Serialize the posts
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
